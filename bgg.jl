@@ -146,7 +146,7 @@ function plot(games=games())
     
 
     hidedecorations!(ax); hidespines!(ax)
-    GLMakie.save("graph.png", f)
+    save("graph.png", f)
     f#, ax, p, A, G, layout
 end
 
