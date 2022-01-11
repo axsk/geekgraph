@@ -34,7 +34,7 @@ function fanslike(id::Int=GLOOMHAVEN)
     game = game["item"]
     id = parse(Int, game["id"])
     name = game["name"]
-    Game(id, name, nothing, nothing, nothing, missing)
+    Game(id, name, nothing, nothing, nothing, nothing, nothing)
   end
 end
 
@@ -43,6 +43,7 @@ function fanslikedists(games::Vector; minweight = 1/2)
   gameids = [game.id for game in games]
   for (i,g) in enumerate(games)
     sim = g.similar
+    ismissing(sim) && continue
     weights = collect(range(1, minweight, length(sim)))
     for (s,w) in zip(sim, weights)
       j = findfirst(isequal(s), gameids)
@@ -52,4 +53,19 @@ function fanslikedists(games::Vector; minweight = 1/2)
     end
   end
   A
+end
+
+function manys(c, n)
+  d=[]
+  for i in c
+      if count(x->x.id == i.id, c) > n
+        push!(d, i)
+      end
+  end
+  unique(x->x.id,d)
+end
+
+function neighbours(g)
+  mg = reduce(vcat, fanslike(g.id) for g in g)
+  manys(mg, 10)
 end

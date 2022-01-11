@@ -1,8 +1,11 @@
 [deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 GraphMakie = "1ecd5474-83a3-4783-bb4f-06765db800d2"
 HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 QuartzImageIO = "dca85d43-d64c-5e67-8c65-017450d5d020"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
