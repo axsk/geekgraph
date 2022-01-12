@@ -22,6 +22,19 @@ function games()
     return g
 end
 
+function top100()
+    r=HTTP.request("GET", "https://boardgamegeek.com/browse/boardgame/") 
+    x = parsehtml(r.body)
+
+    ids = Int[]
+    for r in findall("//td[@class='collection_thumbnail']/a", x)
+        m = match(r"\d+", r["href"])
+        id = parse(Int, m.match)
+        push!(ids, id)
+    end
+    return ids
+end
+
 function usergames(username = "plymth")
     r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/collection/$username")
     x = parsexml(r.body)
@@ -53,6 +66,21 @@ function mechanics!(games::Vector)
 end
 
 using Statistics
+function getgames(ids)
+    i = join(ids, ",")
+    r=HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i?stats=1")
+    x=parsexml(r.body)
+    gs = Game[]
+    for id in ids
+        xgame = "//boardgame[@objectid='$(id)']"
+        name = findfirst("$xgame/name[@primary='true']", root(x)).content
+        mechanics = nodecontent.(findall("$xgame/boardgamemechanic", root(x)))
+        rating = nodecontent(findfirst("$xgame/statistics/ratings/bayesaverage", root(x)))
+        rating = parse(Float64, rating)
+        push!(gs, Game(id, name, nothing, nothing, mechanics, nothing, rating))
+    end
+    gs
+end
 
 function adjacency(g::Vector{<:Game}, mechs=.5)
     M = mechanics_match(g)
@@ -65,7 +93,7 @@ end
 
 mechanics_matchdist(x) = map(x -> x>0 ? 1/x : 0, mechanics_match(x))
 
-mechanics_match(g::Vector{Game}) = mechanics_match([g.mechanics for g in g])
+mechanics_match(g::Vector{<:Game}) = mechanics_match([g.mechanics for g in g])
 
 function mechanics_match(v)
     n = length(v)
@@ -140,7 +168,7 @@ function plot(games=games(); seed=1)
     end
 
     names = [name(g.name) for g in games]
-    colors = [g.own ? :green : g.wish ? :blue : :black for g in games]
+    colors = [g.own == true ? :green : g.wish == true ? :blue : :black for g in games]
     colors = [(c, 0.3) for c in colors]
 
     sizes = [(g.rating/10)^4 * 40 + 5 for g in games]
@@ -160,8 +188,11 @@ function plot(games=games(); seed=1)
 
     hidedecorations!(ax); hidespines!(ax)
     save("graph.png", f)
-    f#, ax, p, A, G, layout
+    @show loss(p,g)
+    f, ax, p, layout, G
 end
+
+loss(p, g) = iterate(LayoutIterator(Stress(initialpos=p[:node_pos][]), g))[2][2]
 
 function name(s::String)
     m = match(r"^([^:]+)", s)

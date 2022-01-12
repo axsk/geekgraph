@@ -15,7 +15,7 @@ end
 Game = Game2
 =#
 
-recommend!(games::Vector{Game}) = foreach(recommend!, games)
+recommend!(games::Vector{<:Game}) = foreach(recommend!, games)
 
 function recommend!(game::Game) 
   recs = fanslike(game.id)
