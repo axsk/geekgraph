@@ -15,6 +15,8 @@ module Revisable
     end
   end
 end
+
+using .Revisable
 #
 #using Main.R
 #
