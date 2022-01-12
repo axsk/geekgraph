@@ -52,6 +52,9 @@ function fanslikedists(games::Vector; minweight = 1/2)
       end
     end
   end
+  colexp = 1/2
+  rowexp = 1/4 #1/2
+  A = A ./ (replace(sum(A, dims=1), 0=>1)).^colexp  ./ replace(sum(A, dims=2), 0=>1).^rowexp
   A
 end
 

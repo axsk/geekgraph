@@ -52,10 +52,15 @@ function mechanics!(games::Vector)
     games
 end
 
+using Statistics
+
 function adjacency(g::Vector{<:Game}, mechs=.5)
     M = mechanics_match(g)
+    M /= mean(M)
     S = fanslikedists(g)
-    (S + S') / 2 * (1-mechs) + mechs * M
+    S /= mean(S)
+    A = S * (1-mechs) + M * mechs 
+    A + A'
 end
 
 mechanics_matchdist(x) = map(x -> x>0 ? 1/x : 0, mechanics_match(x))
@@ -74,6 +79,8 @@ function mechanics_match(v)
             end
         end
     end
+    A = A ./ replace(sum(A, dims=1), 0=>1)
+    A = A ./ replace(sum(A, dims=2), 0=>1)
     A
 end
 
@@ -111,7 +118,7 @@ function plot(games=games(); seed=1)
 
     ed = -1  # scaling of distances
     er = :auto  # scaling of weights
-    el = 2.5  # scaling of linewidth
+    el = 2  # scaling of linewidth
     
     
     A = adjacency(games)
@@ -121,7 +128,7 @@ function plot(games=games(); seed=1)
 
     width=[w^(1/ed) for (i,j,w) in edges(G).iter]
     width = repeat(width, inner=2)
-    width = (width / maximum(width)).^el * 0.5
+    width = (width / maximum(width)).^el * 2
 
 
     if er == :auto 
