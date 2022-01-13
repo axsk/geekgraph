@@ -12,20 +12,38 @@ function fanslikedists(games::Vector; minweight = 1/2)
       end
     end
   end
-  colexp = 1/2  # scale connections of popular games
-  rowexp = 1/4  # scale connections of games with many recommendations
+  colexp = 1/2.#/2  # scale connections of popular games
+  rowexp = 1/4.#/4 #1/4  # scale connections of games with many recommendations
   A = A ./ (replace(sum(A, dims=1), 0=>1)).^colexp  ./ replace(sum(A, dims=2), 0=>1).^rowexp
-  A
 end
 
 
-function adjacency(g::Vector{<:Game}, mechs=.5)
+function adjacency(g::Vector{<:Game}, m=.2)
   M = mechanics_match(g)
+  #M = map(x->x>.5 ? x : 0, M)
   M /= mean(M)
   S = fanslikedists(g)
   S /= mean(S)
-  A = S * (1-mechs) + M * mechs 
-  A + A'
+  A = S * (1-m) + M * m
+  fixzeros!(A)
+  A = A + A'
+  spinv(A)
+  ##=#
+  #M = normalize(mechanics_hammingdist(g))
+  #M = (normalize(mechanics_match(g)))
+  #S = (normalize(fanslikedists(g)))
+  #spinv(M * m + S * (1-m))
+end
+
+spinv(A) = map(x -> x>0 ? 1/x : 0., A)
+normalize(A) = (A + A') / mean(filter(x->x>0, A))
+function fixzeros!(A)
+  m = minimum(filter(x->x>0, A)) / 10
+  for i in 1:size(A,1)
+    if sum(A[:,i]) == 0
+      A[:,i] .= m
+    end
+  end
 end
 
 mechanics_matchdist(x) = map(x -> x>0 ? 1/x : 0, mechanics_match(x))
