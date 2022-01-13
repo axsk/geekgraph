@@ -10,8 +10,8 @@ end
 
 Game(id, name=nothing) = Game(id, name, nothing, nothing, nothing, nothing)
 
-function games() 
-    g=usergames()
+function games(u="plymth") 
+    g=usergames(u)
     mechanics!(g)
     recommend!(g)
     return g
@@ -95,6 +95,7 @@ function fanslike(id::Int=GLOOMHAVEN)
     game = game["item"]
     id = parse(Int, game["id"])
     name = game["name"]
+    println(name)
     Game(id, name, nothing, nothing, nothing, nothing, nothing)
   end
 end

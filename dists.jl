@@ -1,10 +1,38 @@
-function fanslikedists(games::Vector; minweight = 1/2)
+function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2)
+  A = similarity(g, m, a)
+  D = replace(A .^ d, Inf=>100)
+  D = NetworkLayout.pairwise_distance(D, Float64)
+
+  G = SimpleWeightedGraphs.SimpleWeightedGraph(D)
+
+  weights = D .^ (1/d * w)
+
+  layout = Stress(weights = weights, seed=seed, reltols=10e-7,
+      abstolx=10e-7, iterations=1_000_000)
+
+  width = [weights[i,j] for (i,j,w) in edges(G).iter] .^ 1.5
+  width = width ./ maximum(width) .* 1.5
+  width = repeat(width, inner=2)
+  return G, layout, width
+end
+
+function similarity(g, m=.2, a=0)
+  #postprocess(fanvotes(g)) + postprocess(mechanics_match(g))
+  pp = postprocess
+  F = pp(fanvotes(g), a)
+  M = pp(mechanics_match(g),a)
+  F * (1-m) + m* M
+end
+
+function fanvotes(games::Vector; minweight = 1/2)
   A = spzeros(length(games), length(games))
   gameids = [game.id for game in games]
   for (i,g) in enumerate(games)
     sim = g.similar
     ismissing(sim) && continue
-    weights = collect(range(1, minweight, length(sim)))
+ #   weights = collect(range(1, minweight, length(sim)))
+    rate = log(.5) / (8 - 1)
+    weights = exp.( rate * (0:length(sim)-1))
     for (s,w) in zip(sim, weights)
       j = findfirst(isequal(s), gameids)
       if !isnothing(j)
@@ -12,17 +40,27 @@ function fanslikedists(games::Vector; minweight = 1/2)
       end
     end
   end
-  colexp = 1/2.#/2  # scale connections of popular games
-  rowexp = 1/4.#/4 #1/4  # scale connections of games with many recommendations
-  A = A ./ (replace(sum(A, dims=1), 0=>1)).^colexp  ./ replace(sum(A, dims=2), 0=>1).^rowexp
+  return A
+  #colexp = 1/2.#/2  # scale connections of popular games
+  #rowexp = 1/4.#/4 #1/4  # scale connections of games with many recommendations
+  #A = A ./ (replace(sum(A, dims=1), 0=>1)).^colexp  ./ replace(sum(A, dims=2), 0=>1).^rowexp
 end
+
+function postprocess(A, a=1/2, b=a)
+  rows = (replace(sum(A, dims=1), 0=>1)).^a
+  cols = (replace(sum(A, dims=2), 0=>1)).^b
+  A = A ./ (rows .* cols)
+  A = (A + A') / 2
+end
+
+
 
 
 function adjacency(g::Vector{<:Game}, m=.2)
   M = mechanics_match(g)
   #M = map(x->x>.5 ? x : 0, M)
   M /= mean(M)
-  S = fanslikedists(g)
+  S = fanvotes(g)
   S /= mean(S)
   A = S * (1-m) + M * m
   fixzeros!(A)
@@ -62,8 +100,8 @@ function mechanics_match(v)
           end
       end
   end
-  A = A ./ replace(sum(A, dims=1), 0=>1)
-  A = A ./ replace(sum(A, dims=2), 0=>1)
+  #A = A ./ replace(sum(A, dims=1), 0=>1)
+  #A = A ./ replace(sum(A, dims=2), 0=>1)
   A
 end
 
