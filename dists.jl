@@ -34,7 +34,7 @@ function fanvotes(games::Vector; minweight = 1/2)
   gameids = [game.id for game in games]
   for (i,g) in enumerate(games)
     sim = g.similar
-    ismissing(sim) && continue
+    isnothing(sim) && continue
 
     halfweight = 8
     rate = log(.5) / (halfweight - 1)

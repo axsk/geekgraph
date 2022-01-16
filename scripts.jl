@@ -136,11 +136,19 @@ function plymth()
   f
 end
 
-function top(gs = getgames(top100()))
+function top_games()
+  gs = getgames(top100())
+  gs = removeduplicates(gs)
+  recommend!(gs)
+  mechanics!(gs)
+end
+
+function top(gs = top_games())
   f, ax, p, = plot(gs, edgeexp=2.5, edgemult=8)
   ax.title = "BGG Top 100"
   p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
   p[:edge_width] = min.(p[:edge_width][], 1.2)
+  save("top100.png", f)
   f
 end
 

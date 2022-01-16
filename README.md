@@ -2,4 +2,7 @@
 
 Visualizing the network of boardgames I take interest in.
 
-![The Graph](graph.png)
+![BGG Top 100](top100.png)
+
+![My collection](plymth.png)
+
