@@ -1,18 +1,17 @@
 
 
-function plot(games=games(); seed=1)
+function plot(games=games(); seed=1, edgeexp = 3, edgemult = 1.5, mech=0.5)
     #ed = -1  # scaling of distances
     er = -2 #-1.2  # scaling of weights
-    el = 3  # scaling of linewidth
-    linemult = 1.5
+
     
-    A = adjacency(games)
+    A = adjacency(games, mech)
     #dists = map(x->x>0 ? x .^ ed : 0, A)
     G = SimpleWeightedGraphs.SimpleWeightedGraph(A)
 
     width=[w^(-1) for (i,j,w) in edges(G).iter]
     width = repeat(width, inner=2)
-    width = (width / maximum(width)).^el * linemult
+    width = (width / maximum(width)).^edgeexp * edgemult
 
     if er == :auto 
         layout = Stress(seed=seed, iterations=1_000_000_000)
@@ -76,7 +75,9 @@ end
 
 loss(p, g) = iterate(LayoutIterator(Stress(initialpos=p[:node_pos][]), g))[2][2]
 
-function name(s::String)
+name(s::String) = shortname(s)
+
+function shortname(s::String)
     m = match(r"^([^:]+)", s)
     m[1]
 end

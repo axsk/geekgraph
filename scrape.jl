@@ -32,32 +32,39 @@ function top100()
 end
 
 function usergames(username = "plymth", narrow = false)
-    r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/collection/$username")
+    r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/collection/$username?stats=1")
     x = parsexml(r.body)
+
 
     games = Game[]
     for g in findall("//item", x)
-        id = parse(Int, g["objectid"])
-        s = findfirst("status", g)
-        rating = parse(Float64, findfirst("stats/rating/average",g)["value"])
-        rating += parse(Float64, findfirst("stats/rating/bayesaverage",g)["value"])
-        rating /= 2
+        #try 
+            id = parse(Int, g["objectid"])
+            @show name = nodecontent(findfirst("name", g))
+            s = findfirst("status", g)
 
-        prating = try 
-            parse(Float64, findfirst("stats/rating",g)["value"])
-        catch
-            nothing
-        end
-        if narrow && !(s["own"]=="1" || s["wishlist"]=="1")
-            continue
-        end
+            rating = parse(Float64, findfirst("stats/rating/average",g)["value"])
+            rating += parse(Float64, findfirst("stats/rating/bayesaverage",g)["value"])
+            rating /= 2
 
-        g = Game(id)
-        g.own = s["own"] == "1"
-        g.wish = s["wishlist"]=="1"
-        g.rating = rating
-        g.prating = prating
-        push!(games, g)
+            prating = try 
+                parse(Float64, findfirst("stats/rating",g)["value"])
+            catch
+                nothing
+            end
+            if narrow && !(s["own"]=="1" || s["wishlist"]=="1")
+                continue
+            end
+
+            g = Game(id, name)
+            g.own = s["own"] == "1"
+            g.wish = s["wishlist"]=="1"
+            g.rating = rating
+            g.prating = prating
+            push!(games, g)
+        #catch
+            #@show "error $g"
+        #end
     end
     games
 end
