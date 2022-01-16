@@ -11,7 +11,7 @@ end
 
 Game(id, name=nothing) = Game(id, name, nothing, nothing, nothing, nothing, nothing, nothing)
 
-function games(user = "plymth", narrow=true) 
+function games(user = "plymth", narrow=false) 
     g=usergames(user, narrow)
     mechanics!(g)
     recommend!(g)
@@ -40,7 +40,7 @@ function usergames(username = "plymth", narrow = false)
     for g in findall("//item", x)
         #try 
             id = parse(Int, g["objectid"])
-            @show name = nodecontent(findfirst("name", g))
+            name = nodecontent(findfirst("name", g))
             s = findfirst("status", g)
 
             rating = parse(Float64, findfirst("stats/rating/average",g)["value"])

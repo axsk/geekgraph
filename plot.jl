@@ -65,7 +65,7 @@ function usercolors(gs)
     min = minimum(filter(!isnothing, rating))
     max = maximum(filter(!isnothing, rating))
 
-    colors = ColorSchemes.roma
+    colors = ColorSchemes.matter
 
     map(rating) do r
         isnothing(r) && return :grey

@@ -84,7 +84,7 @@ end
 
 function wamsp(gs=wamsp_games())
   f,ax,p, = plot(gs, edgeexp = 2, edgemult=3, seed=4)
-  #p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
+  p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
   ax.title = "wamsp's top ratings (>=8)"
   f
 end
@@ -103,7 +103,7 @@ end
 function disposablesuperhero(gs=disposablesuperhero_games())
   f,ax,p, = plot(gs, edgeexp = 2, edgemult=3, seed=4)
   #p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
-  ax.title = "wamdisposable.superhero's owned and wished (>=7)"
+  ax.title = "disposable.superhero's owned and wished (>=7)"
   #p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
   f
 end
