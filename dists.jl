@@ -1,22 +1,21 @@
-function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, kwargs...)
+function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, legacy=false, kwargs...)
   
-  A = adjacency(g)
-  G = SimpleWeightedGraphs.SimpleWeightedGraph(A)
-  B = NetworkLayout.pairwise_distance(A, Float64)
-  weights = map(x->x>0 ? x^(-2) : 0, B)
-  layout = Stress(weights = weights, seed=seed, iterations=1_000_000_000)
-
-  
-  #A = similarity(g, m, a)
-  #D = replace(A .^ d, Inf=>100)
-  #D = NetworkLayout.pairwise_distance(D, Float64)
-  #G = SimpleWeightedGraphs.SimpleWeightedGraph(D)
-  #weights = D .^ (1/d * w)
-
-
-
- # layout = Stress(weights = weights, seed=seed, reltols=10e-6,
- #     abstolx=10e-6, iterations=1_000_000_000)
+  # legacy is kindof reconstructed with d=-1, m=.5, w=2
+  if legacy
+    A = adjacency(g, m)
+    G = SimpleWeightedGraphs.SimpleWeightedGraph(A)
+    B = NetworkLayout.pairwise_distance(A, Float64)
+    weights = map(x->x>0 ? x^(-2) : 0, B)
+    layout = Stress(weights = weights, seed=seed, iterations=1_000_000_000)
+  else
+    A = similarity(g, m, a)
+    D = replace(A .^ d, Inf=>100)
+    D = NetworkLayout.pairwise_distance(D, Float64)
+    G = SimpleWeightedGraphs.SimpleWeightedGraph(D)
+    weights = D .^ (1/d * w)
+    layout = Stress(weights = weights, seed=seed, reltols=10e-6,
+      abstolx=10e-6, iterations=1_000_000_000)
+  end
 
   width = [weights[i,j] for (i,j,w) in edges(G).iter] .^ 1.5
   width = width ./ maximum(width) .* 1.5
