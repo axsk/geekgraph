@@ -68,7 +68,12 @@ end
 
 function mechanics!(games::Vector)
     i = join([g.id for g in games], ",")
-    r=HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i")
+    r = try 
+        HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i")
+    catch
+        sleep(10)
+        HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i")
+    end
     x=parsexml(r.body)
 
     for g in games
@@ -78,6 +83,7 @@ function mechanics!(games::Vector)
     end
     games
 end
+
 function getgames(ids)
   i = join(ids, ",")
   r=HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i?stats=1")
@@ -98,7 +104,10 @@ function getgames(ids)
 end
 
 
-recommend!(games::Vector{<:Game}) = foreach(recommend!, games)
+recommend!(games::Vector{<:Game}) = foreach(games) do g
+    recommend!(g)
+    print(".")
+end
 
 function recommend!(game::Game) 
   recs = fanslike(game.id)

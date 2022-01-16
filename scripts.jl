@@ -126,6 +126,37 @@ function tommynomad(gs = tommynomad_games())
   f
 end
 
+function plymth()
+  gs = usergames("plymth")
+  recommend!(gs)
+  mechanics!(gs)
+  f,ax,p, = plot(gs)
+  #p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
+  ax.title = "plymth's top 100"
+  f
+end
+
+function top(gs = getgames(top100()))
+  f, ax, p, = plot(gs, edgeexp=2.5, edgemult=8)
+  ax.title = "BGG Top 100"
+  p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
+  p[:edge_width] = min.(p[:edge_width][], 1.2)
+  f
+end
+
+function userprofile(user="plymth"; kwargs...)
+  gs = usergames(user)
+  gs = removeduplicates(gs)
+  recommend!(gs)
+  mechanics!(gs)
+  f,ax,p, = plot(gs; kwargs...)
+  #p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
+  ax.title = "$user's collection"
+  save("$user.png", f)
+  f |> display
+  f, ax, p, gs
+end
+
 
 
 

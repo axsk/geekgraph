@@ -13,13 +13,11 @@ function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, legacy=false, kwargs...)
     D = NetworkLayout.pairwise_distance(D, Float64)
     G = SimpleWeightedGraphs.SimpleWeightedGraph(D)
     weights = D .^ (1/d * w)
-    layout = Stress(weights = weights, seed=seed, reltols=10e-6,
-      abstolx=10e-6, iterations=1_000_000_000)
+    layout = Stress(weights = weights, seed=seed, reltols=10e-7,
+      abstolx=10e-7, iterations=1_000_000_000)
   end
 
-  width = [weights[i,j] for (i,j,w) in edges(G).iter] .^ 1.5
-  width = width ./ maximum(width) .* 1.5
-  width = repeat(width, inner=2)
+  width = [weights[i,j] for (i,j,w) in edges(G).iter]
   return G, layout, width
 end
 

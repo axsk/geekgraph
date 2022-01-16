@@ -1,4 +1,4 @@
-function plot(games=games(); parms...)
+function plot(games=games(); edgemult=1.5, edgeexp=1.5, parms...)
 
 #=
 #function plot(games=games(); seed=1, edgeexp = 3, edgemult = 1.5, mech=0.5)
@@ -25,7 +25,10 @@ function plot(games=games(); parms...)
     end
     =#
 
-    G, layout, w = graph(games; parms...)
+    G, layout, width = graph(games; parms...)
+
+    width = (width ./ maximum(width)) .^ edgeexp .* edgeexp
+    width = repeat(width, inner=2)
 
     names = [name(g.name) for g in games]
     colors = [g.own == true ? :green : g.wish == true ? :blue : :black for g in games]
@@ -42,11 +45,11 @@ function plot(games=games(); parms...)
         node_size=sizes, 
         nlabels=names,
         nlabels_align=(:center, :bottom),
-        nlabels_textsize=sqrt.(sizes)*4,
-        nlabels_distance=5,
+        nlabels_textsize=(sizes) ./ 8. .+ 10.,
+        nlabels_distance=9,
         node_attr = (;alpha=0.1),
         node_color=colors, 
-        edge_width=w,        
+        edge_width=width,        
         layout = (G)->point,
         figure = (resolution=(2480, 1748),))
     
@@ -57,19 +60,22 @@ function plot(games=games(); parms...)
     for (i,pn) in enumerate(layout)
         point = pn
         i%10 == 0 && (p[:node_pos][] = Point2{Float32}.(point))
+        pos = reduce(hcat, p[:node_pos][])
+        (x1,x2),(y1,y2) = extrema(pos, dims=2)
+        scale= 1.1
+        limits!(ax, x1*scale, x2*scale, y1*scale, y2*scale)
         yield()
-        #sleep(0.1)
     end
-    
-    #save("graph.png", f)
+
     @show loss(p,G)
     f, ax, p, layout, G
 end
 
 using ColorSchemes
 function usercolors(gs)
-    rating = [g.prating for g in gs]
+    rating = [g.rating for g in gs]
     min = minimum(filter(!isnothing, rating))
+    min = minimum([min, 7])
     max = maximum(filter(!isnothing, rating))
 
     colors = ColorSchemes.matter
