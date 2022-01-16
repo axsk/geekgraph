@@ -11,8 +11,8 @@ end
 
 Game(id, name=nothing) = Game(id, name, nothing, nothing, nothing, nothing, nothing, nothing)
 
-function games(user = "plymth", narrow=false) 
-    g=usergames(user, narrow)
+function games(user = "plymth") 
+    g=usergames(user)
     mechanics!(g)
     recommend!(g)
     return g
@@ -51,9 +51,6 @@ function usergames(username = "plymth", narrow = false)
                 parse(Float64, findfirst("stats/rating",g)["value"])
             catch
                 nothing
-            end
-            if narrow && !(s["own"]=="1" || s["wishlist"]=="1")
-                continue
             end
 
             g = Game(id, name)
