@@ -6,12 +6,13 @@
     mechanics
     similar
     rating
+    prating
 end
 
-Game(id, name=nothing) = Game(id, name, nothing, nothing, nothing, nothing)
+Game(id, name=nothing) = Game(id, name, nothing, nothing, nothing, nothing, nothing, nothing)
 
-function games() 
-    g=usergames()
+function games(user = "plymth", narrow=true) 
+    g=usergames(user, narrow)
     mechanics!(g)
     recommend!(g)
     return g
@@ -30,7 +31,7 @@ function top100()
     return ids
 end
 
-function usergames(username = "plymth")
+function usergames(username = "plymth", narrow = false)
     r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/collection/$username")
     x = parsexml(r.body)
 
@@ -41,7 +42,21 @@ function usergames(username = "plymth")
         rating = parse(Float64, findfirst("stats/rating/average",g)["value"])
         rating += parse(Float64, findfirst("stats/rating/bayesaverage",g)["value"])
         rating /= 2
-        g = Game(id, nothing, s["own"]=="1", s["wishlist"]=="1", nothing, nothing, rating)
+
+        prating = try 
+            parse(Float64, findfirst("stats/rating",g)["value"])
+        catch
+            nothing
+        end
+        if narrow && !(s["own"]=="1" || s["wishlist"]=="1")
+            continue
+        end
+
+        g = Game(id)
+        g.own = s["own"] == "1"
+        g.wish = s["wishlist"]=="1"
+        g.rating = rating
+        g.prating = prating
         push!(games, g)
     end
     games
@@ -70,7 +85,10 @@ function getgames(ids)
       mechanics = nodecontent.(findall("$xgame/boardgamemechanic", root(x)))
       rating = nodecontent(findfirst("$xgame/statistics/ratings/bayesaverage", root(x)))
       rating = parse(Float64, rating)
-      push!(gs, Game(id, name, nothing, nothing, mechanics, nothing, rating))
+      g = Game(id, name)
+      g.mechanics = mechanics
+      g.rating = rating
+      push!(gs, g)
   end
   gs
 end
@@ -95,6 +113,6 @@ function fanslike(id::Int=GLOOMHAVEN)
     game = game["item"]
     id = parse(Int, game["id"])
     name = game["name"]
-    Game(id, name, nothing, nothing, nothing, nothing, nothing)
+    Game(id, name)
   end
 end

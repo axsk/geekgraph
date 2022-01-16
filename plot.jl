@@ -2,8 +2,9 @@
 
 function plot(games=games(); seed=1)
     #ed = -1  # scaling of distances
-    er = -1.2  # scaling of weights
-    el = 2.5  # scaling of linewidth
+    er = -2 #-1.2  # scaling of weights
+    el = 3  # scaling of linewidth
+    linemult = 1.5
     
     A = adjacency(games)
     #dists = map(x->x>0 ? x .^ ed : 0, A)
@@ -11,7 +12,7 @@ function plot(games=games(); seed=1)
 
     width=[w^(-1) for (i,j,w) in edges(G).iter]
     width = repeat(width, inner=2)
-    width = (width / maximum(width)).^el * 2
+    width = (width / maximum(width)).^el * linemult
 
     if er == :auto 
         layout = Stress(seed=seed, iterations=1_000_000_000)
@@ -24,7 +25,9 @@ function plot(games=games(); seed=1)
 
     names = [name(g.name) for g in games]
     colors = [g.own == true ? :green : g.wish == true ? :blue : :black for g in games]
+    #colors = usercolors(games)
     colors = [(c, 0.3) for c in colors]
+    
 
     layout = Base.Iterators.Stateful(LayoutIterator(layout, G))
     point = popfirst!(layout)
@@ -55,6 +58,20 @@ function plot(games=games(); seed=1)
     #save("graph.png", f)
     @show loss(p,G)
     f, ax, p, layout, G
+end
+
+using ColorSchemes
+function usercolors(gs)
+    rating = [g.prating for g in gs]
+    min = minimum(filter(!isnothing, rating))
+    max = maximum(filter(!isnothing, rating))
+
+    colors = ColorSchemes.roma
+
+    map(rating) do r
+        isnothing(r) && return :grey
+        get(colors, (r - min) / (max - min))
+    end
 end
 
 loss(p, g) = iterate(LayoutIterator(Stress(initialpos=p[:node_pos][]), g))[2][2]
@@ -90,6 +107,5 @@ function lazylayout2(G, layout = Stress())
     Base.Iterators.Stateful(LayoutIterator(layout, G))
     return ()->first(i)
 end
-
 
 

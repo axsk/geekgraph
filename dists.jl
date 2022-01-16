@@ -4,7 +4,11 @@ function fanslikedists(games::Vector; minweight = 1/2)
   for (i,g) in enumerate(games)
     sim = g.similar
     ismissing(sim) && continue
-    weights = collect(range(1, minweight, length(sim)))
+    if length(sim) > 1
+      weights = collect(range(1., minweight, length(sim)))
+    else
+      weights = [1.]
+    end
     for (s,w) in zip(sim, weights)
       j = findfirst(isequal(s), gameids)
       if !isnothing(j)
@@ -18,7 +22,7 @@ function fanslikedists(games::Vector; minweight = 1/2)
 end
 
 
-function adjacency(g::Vector{<:Game}, m=.2)
+function adjacency(g::Vector{<:Game}, m=.5)
   M = mechanics_match(g)
   #M = map(x->x>.5 ? x : 0, M)
   M /= mean(M)
@@ -62,8 +66,8 @@ function mechanics_match(v)
           end
       end
   end
-  A = A ./ replace(sum(A, dims=1), 0=>1)
-  A = A ./ replace(sum(A, dims=2), 0=>1)
+  A = A ./ replace(sum(A, dims=1).^(1/2), 0=>1)
+  A = A ./ replace(sum(A, dims=2).^(1/4), 0=>1)
   A
 end
 
