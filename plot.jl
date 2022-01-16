@@ -73,7 +73,7 @@ end
 
 using ColorSchemes
 function usercolors(gs)
-    rating = [g.rating for g in gs]
+    rating = [g.prating for g in gs]
     min = minimum(filter(!isnothing, rating))
     min = minimum([min, 7])
     max = maximum(filter(!isnothing, rating))

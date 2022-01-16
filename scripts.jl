@@ -152,13 +152,15 @@ function top(gs = top_games())
   f
 end
 
-function userprofile(user="plymth"; kwargs...)
+function userprofile(user="plymth"; userratings=false, kwargs...)
   gs = usergames(user)
   gs = removeduplicates(gs)
   recommend!(gs)
   mechanics!(gs)
   f,ax,p, = plot(gs; kwargs...)
-  #p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
+  if userratings
+    p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
+  end
   ax.title = "$user's collection"
   save("$user.png", f)
   f |> display
