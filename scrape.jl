@@ -104,9 +104,12 @@ function getgames(ids)
 end
 
 
-recommend!(games::Vector{<:Game}) = foreach(games) do g
-    recommend!(g)
-    print(".")
+function recommend!(games::Vector{<:Game})
+    println("getting recommendations")
+    foreach(games) do g
+        recommend!(g)
+        print(".")
+    end
 end
 
 function recommend!(game::Game) 

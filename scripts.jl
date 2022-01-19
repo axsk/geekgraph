@@ -152,11 +152,21 @@ function top(gs = top_games())
   f
 end
 
-function userprofile(user="plymth"; userratings=false, kwargs...)
+function userprofile(user::String="plymth"; gamefilter = (g) -> true, kwargs...) 
   gs = usergames(user)
+  gs = filter(gamefilter, gs)
   gs = removeduplicates(gs)
   recommend!(gs)
   mechanics!(gs)
+  userprofile(gs; user=user, kwargs...)
+end
+
+function userprofile(gs::Vector{Game}; user="nouser", userratings=false, kwargs...)
+  #gs = usergames(user)
+  #gs = filter(gamefilter, gs)
+  #gs = removeduplicates(gs)
+  #recommend!(gs)
+  #mechanics!(gs)
   f,ax,p, = plot(gs; kwargs...)
   if userratings
     p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
@@ -169,12 +179,7 @@ end
 
 
 
-
-
-
-
 function users()
-
   "alobunko"
   "waxbottle"
   "wamsp"
