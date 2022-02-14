@@ -1,0 +1,207 @@
+<html>
+<head>
+  <title>Game Card</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      orientation: centered;      
+    }
+    
+    #card {
+      width: 63mm;
+      height: 88mm;
+      border-radius: 3.175mm;
+      background-color: aliceblue;
+      padding: 3mm;
+      font-family: proxima-nova, Arial, sans-serif
+    }
+    
+    #header {
+      height: 8%;
+      text-align: center;
+    }
+    
+    #ratings{
+      display: inline-block;
+    }
+    
+    #ratingbox {
+      width: 18px;
+      height: 100%;
+      display: inline-flex;
+      font-size: 5pt;
+      text-align: center;
+      flex-direction: column;
+    }
+    
+    #rating{
+      width: 18px;
+      height: 100%;
+      border-radius: 1mm;
+      mask-image: url("meeple.png");
+      mask-size: 110% 110%;
+      display: inline-flex;
+      flex-direction: column-reverse;
+      position: relative
+    }
+    
+    #weight{
+      display: inline-block;
+      padding: 0.1em;
+      vertical-align: super
+    }
+    
+    #playtime{
+      display: inline-block;
+      padding: 0.1em;
+      vertical-align:super
+    }
+
+    #bggrating{
+      display: inline;
+      padding: 0.1em;
+      vertical-align:super
+    }
+    
+    #main {
+      position: relative;
+      border-radius: 8px;
+      height: 90%;
+    }
+    
+    #image{
+      text-align: center;
+      clear: both;
+      height: 3cm;
+    }
+    
+    #image img{
+      object-position: center;
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: cover;
+      border-radius: 3px;
+    }
+    
+
+
+    #title {
+      font-size: 12pt;
+      text-align: center;
+      padding:0.5em
+    }
+    
+    #designer {
+      font-size: 10pt;
+      text-align: right;
+      padding: 0.5em
+    }
+    
+    
+    #description{
+      hyphens: auto;
+      text-align: justify;
+      font-size: 7pt;
+    }
+    
+    
+    #mechanics{
+      font-size: 7pt;
+      position: absolute;
+      bottom: 0px
+    }
+    
+    #mechanics span {
+      align-self: flex-end;
+    }
+    
+    #rectangle{
+      width: 100%
+    }
+    
+  </style>
+</head>
+<body>
+  <div id="card">
+    <div id="header">
+      <div id="bggrating">
+        8.0
+      </div>
+      <div id="ratings">
+        <div id="rating">          
+          <div id="rectangle" style="height: 0%; background-color:red"></div>
+          <div id="rectangle" style="height: 0.9%; background-color:black"></div>
+          <div id="rectangle" style="height: 7.5%; background-color:lightgray"></div>
+        </div><div id="rating">          
+          <div id="rectangle" style="height: 0%; background-color:red"></div>
+          <div id="rectangle" style="height: 68.9%; background-color:black"></div>
+          <div id="rectangle" style="height: 28.8%; background-color:lightgray"></div>
+        </div><div id="rating">
+          <div id="rectangle" style="height: 0%; background-color:red"></div>
+          <div id="rectangle" style="height: 35%; background-color:black"></div>
+          <div id="rectangle" style="height: 62%; background-color:lightgray"></div>
+        </div><div id="rating">
+          <div id="rectangle" style="height: 0%; background-color:red"></div>
+          <div id="rectangle" style="height: 21%; background-color:black"></div>
+          <div id="rectangle" style="height: 51%; background-color:lightgray"></div>
+        </div><div id="rating">
+          <div id="rectangle" style="height: 0%; background-color:red"></div>
+          <div id="rectangle" style="height: 10%; background-color:black"></div>
+          <div id="rectangle" style="height: 30%; background-color:lightgray"></div>
+        </div><div id="rating">
+          <div id="rectangle" style="height: 0%; background-color:red"></div>
+          <div id="rectangle" style="height: 0%; background-color:black"></div>
+          <div id="rectangle" style="height: 0%; background-color:lightgray"></div>
+        </div><div id="rating">
+          <div id="rectangle" style="height: 0%; background-color:red"></div>
+          <div id="rectangle" style="height: 0%; background-color:black"></div>
+          <div id="rectangle" style="height: 0%; background-color:lightgray"></div>
+        </div>
+      </div>
+      <div id="playtime">
+        60
+      </div>
+      <div id="weight">
+        3.0
+      </div>
+    </div>
+    <div id="main">
+      <div id="title">
+        The Castles of Burgundy
+      </div>
+      <div id="image">
+        <img src="burgundy.webp" width=100% heigth=100%>
+      </div>
+      
+      
+      
+      <div id="designer">
+        Stefan Feld, 2011
+      </div>
+      
+      <div id="description" lang="en">
+        The game is set in the Burgundy region of High Medieval France. Each player takes on the role of an aristocrat, originally controlling a small princedom. While playing they aim to build settlements and powerful castles, practice trade along the river, exploit silver mines, and use the knowledge of travelers.
+      </div>
+      
+      <div id="mechanics">
+        
+        <span>
+          Dice Rolling
+          End Game Bonuses
+          Grid Coverage
+          Hexagon Grid
+          Pattern Building
+          Set Collection
+          Tile Placement
+          Turn Order: Stat-Based
+          Variable Set-up
+          Worker Placement with Dice Workers
+        </span> 
+      </div>
+    </div>
+    
+  </div>
+</body>
+</html>
