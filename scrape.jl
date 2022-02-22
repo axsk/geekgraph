@@ -7,9 +7,14 @@
     similar
     rating
     prating
+    playercounts
+    playtime
+    weight
+    description
+    dict
 end
 
-Game(id, name=nothing) = Game(id, name, nothing, nothing, nothing, nothing, nothing, nothing)
+Game(id, name=nothing) = Game(id, name, nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing, Dict())
 
 function games(user = "plymth") 
     g=usergames(user)
@@ -92,17 +97,50 @@ function getgames(ids)
   for id in ids
       xgame = "//boardgame[@objectid='$(id)']"
       name = findfirst("$xgame/name[@primary='true']", root(x)).content
-      mechanics = nodecontent.(findall("$xgame/boardgamemechanic", root(x)))
-      rating = nodecontent(findfirst("$xgame/statistics/ratings/bayesaverage", root(x)))
-      rating = parse(Float64, rating)
+
       g = Game(id, name)
+
+
+      mechanics = nodecontent.(findall("$xgame/boardgamemechanic", root(x)))
       g.mechanics = mechanics
-      g.rating = rating
+
+      rating = nodecontent(findfirst("$xgame/statistics/ratings/bayesaverage", root(x)))
+      g.rating =  parse(Float64, rating)
+
+      weight = nodecontent(findfirst("$xgame/statistics/ratings/averageweight", root(x)))
+      g.weight = parse(Float64, weight)
+      
+      description = nodecontent(findfirst("$xgame/description", root(x)))
+      g.description = description
+
+      g.dict["designer"] = nodecontent(findfirst("$xgame/boardgamedesigner", root(x)))
+      g.dict["year"] =  nodecontent(findfirst("$xgame/yearpublished", root(x)))
+      g.dict["thumbnail"] = nodecontent(findfirst("$xgame/image", root(x)))
+      
+      g.playercounts = playercounts(x, xgame)
+      g.description = description
+      g.playtime = playtime(x, id)
       push!(gs, g)
   end
   gs
 end
 
+function playercounts(x::EzXML.Document, xgame)
+    res = findall("$xgame/poll[@name='suggested_numplayers']/results", x)
+    counts = Dict()
+    for rs in res
+        @show n = rs["numplayers"]
+        v = [parse(Int, r["numvotes"]) for r in elements(rs)]
+        counts[n] = v
+    end
+    return counts
+end
+
+function playtime(x, id)
+    res = findfirst("//boardgame[@objectid='$(id)']/playingtime", x)
+    t = parse(Int, nodecontent(res))
+    return t
+end
 
 function recommend!(games::Vector{<:Game})
     println("getting recommendations")

@@ -1,4 +1,4 @@
-function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, legacy=false, kwargs...)
+function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, legacy=false, offset=0, kwargs...)
   
   # legacy is kindof reconstructed with d=-1, m=.5, w=2
   if legacy
@@ -9,14 +9,31 @@ function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, legacy=false, kwargs...)
     layout = Stress(weights = weights, seed=seed, iterations=1_000_000_000)
   else
     A = similarity(g, m, a)
-    D = replace(A .^ d, Inf=>100)
+    D = replace(A .^ d, Inf=>0)
     D = NetworkLayout.pairwise_distance(D, Float64)
     G = SimpleWeightedGraphs.SimpleWeightedGraph(D)
-    weights = D .^ (1/d * w)
+    weights = D .^ (1/d * w) .+ offset
     layout = Stress(weights = weights, seed=seed, reltols=10e-7,
       abstolx=10e-7, iterations=1_000_000_000)
   end
 
+  width = [weights[i,j] - offset for (i,j,w) in edges(G).iter]
+  return G, layout, width
+end
+
+function pmi_graph(gs; m=.3, a=0)
+  A = similarity(gs, m, 0) .+ 0.1
+  A += A'
+  A ./= sum(A)  # probabilistic
+  X = sum(A, dims=1)
+  Y = sum(A, dims=2)
+  pmi = log.(A ./ (X .* Y))
+  npmi = replace(pmi ./ -log.(A), NaN => 0)
+  D = replace(exp.(-pmi), Inf => 0)
+
+  G = SimpleWeightedGraph(LinearAlgebra.Symmetric(D))
+  weights = (npmi) .^ 1 .+ 0.1
+  layout = Stress(weights = weights)
   width = [weights[i,j] for (i,j,w) in edges(G).iter]
   return G, layout, width
 end

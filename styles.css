@@ -1,0 +1,157 @@
+      body {
+        margin: 0;
+        orientation: centered;      
+        -webkit-print-color-adjust: exact !important;
+      }
+      
+      #card {
+        width: 63mm;
+        height: 88mm;
+        border-radius: 3.175mm;
+        background-color: aliceblue;
+        padding: 3mm;
+        font-family: proxima-nova, Arial, sans-serif;
+        page-break-inside: avoid;
+      }
+      
+      #header {
+        height: 8%;
+        text-align: center;
+      }
+      
+      #ratings{
+        display: inline-block;
+      }
+      
+      #ratingbox {
+        width: 18px;
+        height: 100%;
+        display: inline-flex;
+        font-size: 5pt;
+        text-align: center;
+        flex-direction: row;
+      }
+      
+      #rating{
+        width: 28px;
+        height: 28px;
+        border-radius: 1mm;
+        mask-image: url('meeple.png');
+        mask-size: 108% 113%;
+        display: inline-flex;
+        flex-direction: column-reverse;
+        position: relative;
+
+      }
+      
+      #weight{
+        background-image: url('brain.png');
+      }
+      
+      #playtime{
+        background-image: url('time.png');
+        background-size: 85%;
+      }
+  
+      #bggrating{
+        background-image: url('star.png');
+      }
+
+      #abggrating:before{
+        z-index:-1;
+        position:absolute;
+        left:0;
+        top:0;
+        content: url('star.png');
+        opacity:0.4;
+      }
+
+      .texticon{
+        display: inline-block;
+        padding: 0.2em;
+        margin: 0.2em;
+        background-size: cover;
+        width: 28px;
+        height: 28px;
+        text-align: center;
+        line-height: 28px;
+        text-shadow: 0 0 2px white, 0 0 3px white, 0 0 3px white, 0 0 2px white;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      
+      #main {
+        position: relative;
+        border-radius: 8px;
+        height: 100%;
+        display: flex
+      }
+      
+      #image{
+        text-align: center;
+        clear: both;
+      }
+      
+      #image img{
+        object-position: top;
+        max-height: 6cm;
+        max-width: 100%;
+        object-fit: cover;
+        border-radius: 3px;
+      }
+  
+      #title {
+        font-size: 12pt;
+        text-align: center;
+        padding:0.5em
+      }
+      
+      #designer {
+        font-size: 10pt;
+        text-align: right;
+        padding: 0.5em
+      }
+      
+      #description{
+        hyphens: auto;
+        text-align: justify;
+        font-size: 0pt;
+      }
+      
+      #mechanics{
+        font-size: 7pt;
+        position: absolute;
+        bottom: 0px
+      }
+      
+      #mechanics div {
+        display: inline-block;
+        border-radius: 3pt;
+        border-style: hidden;
+        background-color: gainsboro;
+        padding: 2px;
+        margin: 1px;
+      }
+      
+      .ratingbest{
+        width: 100%;
+        background-color: black
+      }
+
+      .ratingrec{
+        width: 100%;
+        background-color: lightgray
+      }
+
+      .ratingn{
+        width: 100%;
+        position: absolute
+      }
+
+      .right{
+        width: 20%
+      }
+
+      .left{
+        width: 80%;
+      }
