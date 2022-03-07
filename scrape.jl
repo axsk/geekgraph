@@ -104,7 +104,7 @@ function getgames(ids)
       mechanics = nodecontent.(findall("$xgame/boardgamemechanic", root(x)))
       g.mechanics = mechanics
 
-      rating = nodecontent(findfirst("$xgame/statistics/ratings/bayesaverage", root(x)))
+      rating = nodecontent(findfirst("$xgame/statistics/ratings/average", root(x)))
       g.rating =  parse(Float64, rating)
 
       weight = nodecontent(findfirst("$xgame/statistics/ratings/averageweight", root(x)))
