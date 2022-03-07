@@ -2,16 +2,21 @@
         margin: 0;
         orientation: centered;      
         -webkit-print-color-adjust: exact !important;
+        #display: flex;
+        #flex-wrap: wrap;
       }
       
       #card {
-        width: 63mm;
-        height: 88mm;
+        width: 57mm;
+        height: 89mm;
         border-radius: 3.175mm;
         background-color: aliceblue;
         padding: 3mm;
-        font-family: proxima-nova, Arial, sans-serif;
-        page-break-inside: avoid;
+        font-family: georgia, proxima-nova, Arial, sans-serif;
+        break-inside: avoid;
+        overflow: hidden;
+        margin: 2mm;
+        display: inline-block;
       }
       
       #header {
@@ -46,15 +51,17 @@
       
       #weight{
         background-image: url('brain.png');
+        background-size: 75%;
       }
       
       #playtime{
         background-image: url('time.png');
-        background-size: 85%;
+        background-size: 75%;
       }
   
       #bggrating{
         background-image: url('star.png');
+        background-size: 79%;
       }
 
       #abggrating:before{
@@ -72,12 +79,13 @@
         margin: 0.2em;
         background-size: cover;
         width: 28px;
-        height: 28px;
+        height: 24px;
         text-align: center;
-        line-height: 28px;
+        line-height: 24px;
         text-shadow: 0 0 2px white, 0 0 3px white, 0 0 3px white, 0 0 2px white;
         background-repeat: no-repeat;
         background-position: center;
+        font-size: 1.2em;
       }
       
       #main {
@@ -94,16 +102,16 @@
       
       #image img{
         object-position: top;
-        max-height: 6cm;
+        max-height: 5.5cm;
         max-width: 100%;
         object-fit: cover;
         border-radius: 3px;
       }
   
       #title {
-        font-size: 12pt;
+        font-size: 13pt;
         text-align: center;
-        padding:0.5em
+        margin-bottom: 4pt;
       }
       
       #designer {
@@ -120,17 +128,17 @@
       
       #mechanics{
         font-size: 7pt;
-        position: absolute;
+        #position: absolute;
         bottom: 0px
       }
       
-      #mechanics div {
+      #mechanics p {
         display: inline-block;
-        border-radius: 3pt;
+        border-radius: 3px;
         border-style: hidden;
         background-color: gainsboro;
-        padding: 2px;
-        margin: 1px;
+        padding: 0px 1px 0px 1px;
+        margin: 1px 1px;
       }
       
       .ratingbest{
@@ -140,18 +148,20 @@
 
       .ratingrec{
         width: 100%;
-        background-color: lightgray
+        background-color: #979797;
       }
 
       .ratingn{
         width: 100%;
-        position: absolute
+        position: absolute;
+        text-indent: 2px;
       }
 
       .right{
-        width: 20%
+        width: 13%
       }
 
       .left{
-        width: 80%;
+        width: 87%;
+        position: relative
       }

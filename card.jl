@@ -1,6 +1,6 @@
 function cards()
   gs=getgames([g.id for g in usergames("plymth") if g.own])
-  savecard(g)
+  savecard(gs)
   gs
 end
 
@@ -20,7 +20,10 @@ function card(g)
   end
 
   playercounts = ""
-  for k in sort(collect(keys(g.playercounts)))
+  counts = sort(collect(keys(g.playercounts)))
+  counts = filter(x->!contains(x,"+"), counts)
+  counts = counts[end-(min(length(counts), 7)-1):end]
+  for k in counts
     #v = get(g.playercounts, "$i", [0,0,1])
     i = k
     v = get(g.playercounts, k, nothing)
@@ -29,12 +32,12 @@ function card(g)
     tmp = "<div id='rating'>          
             <div class='ratingbest' style='height: $(best)%'></div>
             <div class='ratingrec' style='height: $(rec)%'></div>
-            <div class='ratingn' style='position: absolute; width: 28'>$i</div>
+            <div class='ratingn'>$i</div>
           </div>"
     playercounts *= tmp
   end
 
-  mechanics = reduce(*, map(m->"<div>$m</div>", g.mechanics))
+  mechanics = reduce(*, map(m->"<p>$m</p>", g.mechanics))
 
 
   html = #="
