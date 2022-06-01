@@ -1,7 +1,7 @@
-function plot(games=games(); edgemult=1.5, edgeexp=1.5, parms...)
+function plot(games=games(); edgeexp=1, edgemult=edgeexp,parms...)
 
 #=
-#function plot(games=games(); seed=1, edgeexp = 3, edgemult = 1.5, mech=0.5)
+#function plot(games=games(); seed=1, edgeexp = 3, edgemult = .5, mech=0.5)
     
     #ed = -1  # scaling of distances
     er = -2 #-1.2  # scaling of weights
@@ -27,7 +27,7 @@ function plot(games=games(); edgemult=1.5, edgeexp=1.5, parms...)
 
     G, layout, width = graph(games; parms...)
 
-    width = (width ./ maximum(width)) .^ edgeexp .* edgeexp
+    width = (width ./ maximum(width)) .^ edgeexp .* edgemult
     width = repeat(width, inner=2)
 
     names = [name(g.name) for g in games]
@@ -60,6 +60,7 @@ function plot(games=games(); edgemult=1.5, edgeexp=1.5, parms...)
     for (i,pn) in enumerate(layout)
         point = pn
         i%10 == 0 && (p[:node_pos][] = Point2{Float32}.(point))
+        i > 1000 && break
         pos = reduce(hcat, p[:node_pos][])
         (x1,x2),(y1,y2) = extrema(pos, dims=2)
         scale= 1.1
@@ -91,8 +92,17 @@ loss(p, g) = iterate(LayoutIterator(Stress(initialpos=p[:node_pos][]), g))[2][2]
 name(s::String) = shortname(s)
 
 function shortname(s::String)
-    m = match(r"^([^:]+)", s)
-    m[1]
+    m = match(r"^([^:]+)\W*(.*)", s)
+    n = m[1]
+    extra = ""
+    for s in  split(m[2], " ")
+        length(s) == 0 && continue
+        extra *= s[1]
+    end
+    if length(extra)>0
+        extra = ": "*extra[1:min(1, length(extra))]
+    end
+    n #* extra
 end
 
 function myplot(dists)

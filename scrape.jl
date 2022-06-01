@@ -23,8 +23,8 @@ function games(user = "plymth")
     return g
 end
 
-function top100()
-    r=HTTP.request("GET", "https://boardgamegeek.com/browse/boardgame/") 
+function top100(url = "https://boardgamegeek.com/browse/boardgame/")
+    r=HTTP.request("GET", url) 
     x = parsehtml(r.body)
 
     ids = Int[]
@@ -35,6 +35,8 @@ function top100()
     end
     return ids
 end
+
+wargames() = top100("https://boardgamegeek.com/wargames/browse/boardgame")
 
 function usergames(username = "plymth", narrow = false)
     r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/collection/$username?stats=1")
@@ -100,25 +102,21 @@ function getgames(ids)
 
       g = Game(id, name)
 
-
-      mechanics = nodecontent.(findall("$xgame/boardgamemechanic", root(x)))
-      g.mechanics = mechanics
-
-      rating = nodecontent(findfirst("$xgame/statistics/ratings/average", root(x)))
-      g.rating =  parse(Float64, rating)
-
-      weight = nodecontent(findfirst("$xgame/statistics/ratings/averageweight", root(x)))
-      g.weight = parse(Float64, weight)
+      getproperty(prop) = nodecontent.(findall("$xgame/$prop", root(x)))
+          
+      g.rating =  parse(Float64, getproperty("statistics/ratings/average")[1])
+      g.weight = parse(Float64, getproperty("statistics/ratings/averageweight")[1])
       
-      description = nodecontent(findfirst("$xgame/description", root(x)))
-      g.description = description
+      g.mechanics = getproperty("boardgamemechanic")
+      g.description = getproperty("description")[1]
 
       g.dict["designer"] = nodecontent(findfirst("$xgame/boardgamedesigner", root(x)))
       g.dict["year"] =  nodecontent(findfirst("$xgame/yearpublished", root(x)))
       g.dict["thumbnail"] = nodecontent(findfirst("$xgame/image", root(x)))
+      g.dict["category"] = getproperty("boardgamecategory")
+      g.dict["family"] = getproperty("boardgamefamily")
       
       g.playercounts = playercounts(x, xgame)
-      g.description = description
       g.playtime = playtime(x, id)
       push!(gs, g)
   end
@@ -129,7 +127,7 @@ function playercounts(x::EzXML.Document, xgame)
     res = findall("$xgame/poll[@name='suggested_numplayers']/results", x)
     counts = Dict()
     for rs in res
-        @show n = rs["numplayers"]
+        n = rs["numplayers"]
         v = [parse(Int, r["numvotes"]) for r in elements(rs)]
         counts[n] = v
     end
@@ -154,6 +152,7 @@ function recommend!(game::Game)
   recs = fanslike(game.id)
   game.similar = [r.id for r in recs]
 end
+
 
 GLOOMHAVEN = 174430
 

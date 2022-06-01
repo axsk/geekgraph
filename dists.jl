@@ -1,3 +1,8 @@
+# m [0-1]: ratio of similar playerbase [0] to mechanics [1]
+# a [1/2]: exponent for the row/col sums used in postprocessing for the normalization of the similarity matrices
+# d [-1/2]: exponent for mapping similiarity to distance
+
+
 function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, legacy=false, offset=0, kwargs...)
   
   # legacy is kindof reconstructed with d=-1, m=.5, w=2
@@ -9,15 +14,15 @@ function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, legacy=false, offset=0, kwar
     layout = Stress(weights = weights, seed=seed, iterations=1_000_000_000)
   else
     A = similarity(g, m, a)
-    D = replace(A .^ d, Inf=>0)
-    D = NetworkLayout.pairwise_distance(D, Float64)
+    D = replace(A .^ d, Inf=>0)  # map similiarity to distances
+    D = NetworkLayout.pairwise_distance(D, Float64) # interpolate unknown distances
     G = SimpleWeightedGraphs.SimpleWeightedGraph(D)
-    weights = D .^ (1/d * w) .+ offset
-    layout = Stress(weights = weights, seed=seed, reltols=10e-7,
-      abstolx=10e-7, iterations=1_000_000_000)
+    weights = D .^ (1/d * w) .+ offset # map distances back to similarities
+    layout = Stress(seed=seed, reltols=10e-8,
+      abstolx=0, iterations=1_000_000_000)
   end
 
-  width = [weights[i,j] - offset for (i,j,w) in edges(G).iter]
+  width = [A[i,j] for (i,j,w) in edges(G).iter]
   return G, layout, width
 end
 
@@ -122,7 +127,7 @@ mechanics_matchdist(x) = map(x -> x>0 ? 1/x : 0, mechanics_match(x))
 
 mechanics_match(g::Vector{<:Game}) = mechanics_match([g.mechanics for g in g])
 
-function mechanics_match(v)
+function mechanics_match(v, exponent = 5)
   n = length(v)
   A = zeros(n,n)
   for i in 1:n
@@ -134,7 +139,7 @@ function mechanics_match(v)
           end
       end
   end
-  A
+  A .^ exponent
 end
 
 mechanics_hammingdist(g::Vector{Game}) = mechanics_hammingdist([g.mechanics for g in g])

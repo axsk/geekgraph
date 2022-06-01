@@ -1,11 +1,10 @@
 function cards()
   gs=getgames([g.id for g in usergames("plymth") if g.own])
-  savecard(gs)
+  savecards(gs)
   gs
 end
 
 function card(g)
-
   title = g.name
   playtime = g.playtime
   designer = g.dict["designer"]
