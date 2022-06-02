@@ -93,7 +93,7 @@ end
 
 function getgames(ids)
   i = join(ids, ",")
-  r=HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i?stats=1")
+  @time r=HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i?stats=1")
   x=parsexml(r.body)
   gs = Game[]
   for id in ids
@@ -106,7 +106,12 @@ function getgames(ids)
           
       g.rating =  parse(Float64, getproperty("statistics/ratings/average")[1])
       g.weight = parse(Float64, getproperty("statistics/ratings/averageweight")[1])
-      
+      g.dict["usersrated"] = parse(Int, getproperty("statistics/ratings/usersrated")[1])
+      g.dict["brating"] = parse(Float64, getproperty("statistics/ratings/bayesaverage")[1])
+      g.dict["stddev"] = parse(Float64, getproperty("statistics/ratings/stddev")[1])
+      g.dict["subdomain"] = getproperty("boardgamesubdomain")
+
+         
       g.mechanics = getproperty("boardgamemechanic")
       g.description = getproperty("description")[1]
 
@@ -186,10 +191,11 @@ function plays(id)
 end
 
 function playstats!(g)
-    @show id = g.id
+    id = g.id
     total, ppy = plays(id)
     g.dict["plays"] = total
-    @show g.dict["playrate"] = ppy / g.dict["owners"]
+    g.dict["playrate"] = ppy / g.dict["owners"]
+    @show g.name, g.dict["playrate"]
 end
 
 function playstats!(games::Vector) 
@@ -216,7 +222,7 @@ function parselist(id = 292940)
 
 end
 
-wargamelist() = playstats!(getgames(parselist()))
+wargamelist() = playstats!(getgames(unique(parselist())))
 
 import Base.Dict
 function Dict(g::Game)
@@ -248,8 +254,8 @@ function DataFrame(t::Vector{Game})
     for g in t
         push!(df, Dict(g), cols=:union)
     end
-    df = df[!, Cols(:id, :year, :name, :rating, :weight, :playrate, :plays, :playtime, :owners, :category, :family, :)]
-    df[!, :timeyear] = df[!, :playrate] .* df[!, :playtime]
+    #df = df[!, Cols(:id, :year, :name, :rating, :weight, :playrate, :plays, :playtime, :owners, :category, :family, :)]
+    #df[!, :timeyear] = df[!, :playrate] .* df[!, :playtime]
     df
 end
 
