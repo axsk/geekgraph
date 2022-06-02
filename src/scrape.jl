@@ -111,10 +111,11 @@ function getgames(ids)
       g.description = getproperty("description")[1]
 
       g.dict["designer"] = nodecontent(findfirst("$xgame/boardgamedesigner", root(x)))
-      g.dict["year"] =  nodecontent(findfirst("$xgame/yearpublished", root(x)))
+      g.dict["year"] =  parse(Int, nodecontent(findfirst("$xgame/yearpublished", root(x))))
       g.dict["thumbnail"] = nodecontent(findfirst("$xgame/image", root(x)))
       g.dict["category"] = getproperty("boardgamecategory")
       g.dict["family"] = getproperty("boardgamefamily")
+      g.dict["owners"] = parse(Int, getproperty("statistics/ratings/owned")[1])
       
       g.playercounts = playercounts(x, xgame)
       g.playtime = playtime(x, id)
@@ -168,4 +169,94 @@ function fanslike(id::Int=GLOOMHAVEN)
     name = game["name"]
     Game(id, name)
   end
+end
+
+using Dates
+
+function plays(id)
+    sleep(3)
+    r = HTTP.get("https://boardgamegeek.com/xmlapi2/plays?id=$id")
+    x = parsexml(r.body)
+    plays = root(x)
+    total = parse(Int, plays["total"])
+    allplays = collect(eachelement(plays))
+    playdays = (today() - Date(allplays[end]["date"])).value
+    playsperyear = 365 * length(allplays) / playdays
+    return total, playsperyear
+end
+
+function playstats!(g)
+    @show id = g.id
+    total, ppy = plays(id)
+    g.dict["plays"] = total
+    @show g.dict["playrate"] = ppy / g.dict["owners"]
+end
+
+function playstats!(games::Vector) 
+    foreach(playstats!, games)
+    return games
+end
+
+Int(s::String) = parse(Int, s)
+
+function parselist(id = 292940)
+    r = HTTP.get("https://boardgamegeek.com/xmlapi/geeklist/292940")
+    x = parsexml(r.body)
+    ids = []
+    for n in findall("//item", root(x))
+        
+        push!(ids, Int(n["objectid"]))
+        text = nodecontent(findfirst("body", n))
+        for m in eachmatch(r"thing=(.*?)]", text)
+           push!(ids, Int(String(m.captures[1])))
+        end
+
+    end
+    ids
+
+end
+
+wargamelist() = playstats!(getgames(parselist()))
+
+import Base.Dict
+function Dict(g::Game)
+    #d = copy(g.dict)
+    d = Dict()
+    for (k,v) in g.dict
+        d[Symbol(k)] = v
+    end
+    d[:id] = g.id
+    d[:mechanics] = g.mechanics
+    d[:desc] = g.description
+    d[:name] = g.name
+    d[:recplayers] = g.playercounts
+    d[:playtime] = g.playtime
+    d[:rating] = g.rating
+    d[:similar] = g.similar
+    d[:weight] = g.weight
+    d[:playerwish] = g.wish
+    d[:playerrating] = g.prating
+    d[:playerown] = g.own
+    return d
+end
+
+#DataFrame(t::Vector{Game}) = DataFrame(permutedims(hcat([collect(values(Dict(t))) for t in t]...)), keys(Dict(t[1])) |> collect)
+using DataFrames
+import DataFrames.DataFrame
+function DataFrame(t::Vector{Game})
+    df = DataFrames.DataFrame()
+    for g in t
+        push!(df, Dict(g), cols=:union)
+    end
+    df = df[!, Cols(:id, :year, :name, :rating, :weight, :playrate, :plays, :playtime, :owners, :category, :family, :)]
+    df[!, :timeyear] = df[!, :playrate] .* df[!, :playtime]
+    df
+end
+
+allgameids() = union([g.id for g in usergames()], wargames(), parselist(), top100())
+
+function allgames()
+    gs = getgames(allgameids())
+    gs = playstats!(gs)
+    DataFrame(gs)
 end
