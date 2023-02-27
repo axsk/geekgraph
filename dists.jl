@@ -1,8 +1,9 @@
 function graph(g; seed=1, d=-1/2, w=1, m=.3, a=1/2, legacy=false, offset=0, kwargs...)
-  
+  global A
   # legacy is kindof reconstructed with d=-1, m=.5, w=2
   if legacy
     A = adjacency(g, m)
+    
     G = SimpleWeightedGraphs.SimpleWeightedGraph(A)
     B = NetworkLayout.pairwise_distance(A, Float64)
     weights = map(x->x>0 ? x^(-2) : 0, B)

@@ -133,7 +133,15 @@ function plymth()
   f,ax,p, = plot(gs)
   #p[:node_color] = [(c, 0.8) for c in usercolors(gs)]
   ax.title = "plymth's top 100"
-  f
+  display(f)
+  gs
+end
+
+function fullgames(user = "plymth")
+  gs = usergames(user)
+  recommend!(gs)
+  mechanics!(gs)
+  gs
 end
 
 function top_games()
@@ -155,7 +163,7 @@ end
 function userprofile(user::String="plymth"; gamefilter = (g) -> true, kwargs...) 
   gs = usergames(user)
   gs = filter(gamefilter, gs)
-  gs = removeduplicates(gs)
+  #gs = removeduplicates(gs)
   recommend!(gs)
   mechanics!(gs)
   userprofile(gs; user=user, kwargs...)

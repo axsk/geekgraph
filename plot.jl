@@ -39,13 +39,13 @@ function plot(games=games(); edgemult=1.5, edgeexp=1.5, parms...)
     layout = Base.Iterators.Stateful(LayoutIterator(layout, G))
     point = popfirst!(layout)
 
-    sizes = [(g.rating/10)^4 * 40 + 5 for g in games]
-
+    sizes = [((g.rating/10)^1 * 20 + 5) * (0.8 * g.own + .3 * g.wish + .2) for g in games]
+    @show sizes
     f, ax, p = graphplot(G, 
         node_size=sizes, 
         nlabels=names,
         nlabels_align=(:center, :bottom),
-        nlabels_textsize=(sizes) ./ 8. .+ 10.,
+        nlabels_fontsize=(sizes),# ./ 8. .+ 10.,
         nlabels_distance=9,
         node_attr = (;alpha=0.1),
         node_color=colors, 
