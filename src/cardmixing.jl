@@ -1,4 +1,5 @@
 using Distributions
+using Plots
 
 hand(n=52) = collect(1:n)
 
@@ -43,13 +44,17 @@ end
 (s::Cut)(cards) = cut(cards, s.pos)
 (s::Overhand)(cards) = overhand(cards, s.folds)
 
+cost(s::Riffle) = 1
+cost(s::Overhand) = .5 + s.folds / 30
+cost(s::Cut) = .3
 
 
-function cut(cards, pos=1/3; stdfact=1/3)
-    pos = pos + randn() * pos * stdfact
+
+function cut(cards, pos=1/3; stdfact=3)
+    #pos = pos + randn() * stdfact
     n = length(cards)
     
-    cut = floor(Int, pos*n)
+    cut = floor(Int, pos*n + randn() * stdfact)
     cut = min(cut, n-2)
     cut = max(cut, 1)
     shuffled = copy(cards)
@@ -58,7 +63,7 @@ function cut(cards, pos=1/3; stdfact=1/3)
     shuffled
 end
 
-function overhand(cards, folds = 7; stdfact = .5)
+function overhand(cards, folds = 7; stdfact = .3)
     n = length(cards)
     meansize = n / folds
     cards = reverse(cards)  # reverse to take from the back
@@ -86,10 +91,14 @@ function deckentropy(decks)
     
     pos = zero(decks[1])
     dists = zero(decks[1])
+    
     for deck in decks 
+        
         n = length(deck)
-        i = findfirst(deck .== 1)
-        j = findfirst(deck .== 2)
+        f1 = 1
+        f2 = 2
+        i = findfirst(deck .== f1)
+        j = findfirst(deck .== f2)
         pos[i] +=1 
         dists[(i-j+n)%n] += 1 
     end
@@ -111,7 +120,7 @@ function evaluate(protocol; n=1000)
         end
         push!(decks, cards)
     end
-    deckentropy(decks) / (-2 * log(1/length(decks[1])))
+    h = deckentropy(decks) / (-2 * log(1/length(decks[1])))
 end
 
 function plot_overhand(;folds=1:20, repeats=1:20, n=2_000)
@@ -130,3 +139,37 @@ function plot_overhand(;folds=1:20, repeats=1:20, n=2_000)
     plot!()
 end
 
+function plot_strategies(n=100)
+    strats = []
+    push!(strats, [Riffle()])
+    for c in 2:5
+        push!(strats, [Riffle(), Cut(1/c)])
+    end
+    for n in 2:8
+
+        push!(strats, [Overhand(n)])
+        push!(strats, [Riffle(), Overhand(n)])
+        push!(strats, [Riffle(), Riffle(), Overhand(n)])
+        for c in 2:5
+           # push!(strats, [Overhand(n), Cut(1/c)])
+        end
+    end
+    plot()
+    for strat in strats
+        cs = []
+        hs = []
+        for repeats in 1:7
+        
+            push!(cs, sum(cost.(strat)) * repeats)
+            push!(hs, evaluate(repeat(strat, repeats), n=n))
+            
+        end
+
+        scatter!(cs, hs, label=string(strat)[5:end-1])
+    end
+    plot!()
+    xlims!((0,10))
+    plot!(legend=:bottomright)
+    #xaxis!(:log)
+    #yaxis!(:log)
+end
