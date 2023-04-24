@@ -1,1 +1,4 @@
 *.png
+*.jld2
+*.bak
+.vscode
