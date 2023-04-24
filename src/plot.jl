@@ -2,11 +2,11 @@ function plot(games=games(); edgeexp=1, edgemult=edgeexp,parms...)
 
 #=
 #function plot(games=games(); seed=1, edgeexp = 3, edgemult = .5, mech=0.5)
-    
+
     #ed = -1  # scaling of distances
     er = -2 #-1.2  # scaling of weights
 
-    
+
     A = adjacency(games, mech)
     #dists = map(x->x>0 ? x .^ ed : 0, A)
     G = SimpleWeightedGraphs.SimpleWeightedGraph(A)
@@ -15,7 +15,7 @@ function plot(games=games(); edgeexp=1, edgemult=edgeexp,parms...)
     width = repeat(width, inner=2)
     width = (width / maximum(width)).^edgeexp * edgemult
 
-    if er == :auto 
+    if er == :auto
         layout = Stress(seed=seed, iterations=1_000_000_000)
     else
         B = NetworkLayout.pairwise_distance(A, Float64)
@@ -34,29 +34,29 @@ function plot(games=games(); edgeexp=1, edgemult=edgeexp,parms...)
     colors = [g.own == true ? :green : g.wish == true ? :blue : :black for g in games]
     #colors = usercolors(games)
     colors = [(c, 0.3) for c in colors]
-    
+
 
     layout = Base.Iterators.Stateful(LayoutIterator(layout, G))
     point = popfirst!(layout)
 
     sizes = [(g.rating/10)^4 * 40 + 5 for g in games]
 
-    f, ax, p = graphplot(G, 
-        node_size=sizes, 
+    f, ax, p = graphplot(G,
+        node_size=sizes,
         nlabels=names,
         nlabels_align=(:center, :bottom),
         nlabels_textsize=(sizes) ./ 8. .+ 10.,
         nlabels_distance=9,
         node_attr = (;alpha=0.1),
-        node_color=colors, 
-        edge_width=width,        
+        node_color=colors,
+        edge_width=width,
         layout = (G)->point,
         figure = (resolution=(2480, 1748),))
-    
+
     hidedecorations!(ax); hidespines!(ax)
     display(f)
     #sleep(2)
-    
+
     for (i,pn) in enumerate(layout)
         point = pn
         i%10 == 0 && (p[:node_pos][] = Point2{Float32}.(point))
@@ -131,5 +131,3 @@ function lazylayout2(G, layout = Stress())
     Base.Iterators.Stateful(LayoutIterator(layout, G))
     return ()->first(i)
 end
-
-
