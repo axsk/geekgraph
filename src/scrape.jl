@@ -38,7 +38,7 @@ end
 
 wargames() = top100("https://boardgamegeek.com/wargames/browse/boardgame")
 
-function usergames(username = "plymth", narrow = false)
+function usergames(username = "plymth")
     r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/collection/$username?stats=1")
     x = parsexml(r.body)
 
