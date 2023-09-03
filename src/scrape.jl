@@ -16,16 +16,16 @@ end
 
 Game(id, name=nothing) = Game(id, name, nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing, nothing, Dict())
 
-function games(user = "plymth")
-    g=usergames(user)
+function games(user="plymth")
+    g = usergames(user)
     mechanics!(g)
     recommend!(g)
     return g
 end
 
-function top100(url = "https://boardgamegeek.com/browse/boardgame/")
-    r=HTTP.request("GET", url)
-    x = parsehtml(r.body)
+function top100(url="https://boardgamegeek.com/browse/boardgame/")
+    # r=HTTP.request("GET", url)
+    x = parsehtml(myrequest(url))
 
     ids = Int[]
     for r in findall("//td[@class='collection_thumbnail']/a", x)
@@ -38,36 +38,38 @@ end
 
 wargames() = top100("https://boardgamegeek.com/wargames/browse/boardgame")
 
-function usergames(username = "plymth")
-    r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/collection/$username?stats=1")
-    x = parsexml(r.body)
+function usergames(username="plymth")
+    #r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/collection/$username?stats=1")
+    #x = parsexml(r.body)
+
+    x = parsexml(myrequest("https://www.boardgamegeek.com/xmlapi/collection/$username?stats=1"))
 
 
     games = Game[]
     for g in findall("//item", x)
         #try
-            id = parse(Int, g["objectid"])
-            name = nodecontent(findfirst("name", g))
-            s = findfirst("status", g)
+        id = parse(Int, g["objectid"])
+        name = nodecontent(findfirst("name", g))
+        s = findfirst("status", g)
 
-            rating = parse(Float64, findfirst("stats/rating/average",g)["value"])
-            rating += parse(Float64, findfirst("stats/rating/bayesaverage",g)["value"])
-            rating /= 2
+        rating = parse(Float64, findfirst("stats/rating/average", g)["value"])
+        rating += parse(Float64, findfirst("stats/rating/bayesaverage", g)["value"])
+        rating /= 2
 
-            prating = try
-                parse(Float64, findfirst("stats/rating",g)["value"])
-            catch
-                nothing
-            end
+        prating = try
+            parse(Float64, findfirst("stats/rating", g)["value"])
+        catch
+            nothing
+        end
 
-            g = Game(id, name)
-            g.own = s["own"] == "1"
-            g.wish = s["wishlist"]=="1"
-            g.rating = rating
-            g.prating = prating
-            push!(games, g)
+        g = Game(id, name)
+        g.own = s["own"] == "1"
+        g.wish = s["wishlist"] == "1"
+        g.rating = rating
+        g.prating = prating
+        push!(games, g)
         #catch
-            #@show "error $g"
+        #@show "error $g"
         #end
     end
     games
@@ -76,12 +78,14 @@ end
 function mechanics!(games::Vector)
     i = join([g.id for g in games], ",")
     r = try
-        HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i")
+        #HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i").body
+        myrequest("https://www.boardgamegeek.com/xmlapi/boardgame/$i")
     catch
         sleep(10)
-        HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i")
+        #HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i").body
+        myrequest("https://www.boardgamegeek.com/xmlapi/boardgame/$i")
     end
-    x=parsexml(r.body)
+    x = parsexml(r)
 
     for g in games
         xgame = "//boardgame[@objectid='$(g.id)']"
@@ -92,45 +96,47 @@ function mechanics!(games::Vector)
 end
 
 function getgames(ids)
-  i = join(ids, ",")
-  @time r=HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i?stats=1")
-  x=parsexml(r.body)
-  gs = Game[]
-  for id in ids
-      xgame = "//boardgame[@objectid='$(id)']"
-      name = findfirst("$xgame/name[@primary='true']", root(x)).content
+    i = join(ids, ",")
+    #@time r = HTTP.request("GET", "https://www.boardgamegeek.com/xmlapi/boardgame/$i?stats=1").body
+    @time r = myrequest("https://www.boardgamegeek.com/xmlapi/boardgame/$i?stats=1")
+    x = parsexml(r)
+    gs = Game[]
+    for gnode in elements(root(x))
 
-      g = Game(id, name)
+        getproperty(prop) = nodecontent.(findall("$prop", gnode))
 
-      getproperty(prop) = nodecontent.(findall("$xgame/$prop", root(x)))
+        id = parse(Int, gnode["objectid"])
+        name = findfirst("name[@primary='true']", gnode).content
 
-      g.rating =  parse(Float64, getproperty("statistics/ratings/average")[1])
-      g.weight = parse(Float64, getproperty("statistics/ratings/averageweight")[1])
-      g.dict["usersrated"] = parse(Int, getproperty("statistics/ratings/usersrated")[1])
-      g.dict["brating"] = parse(Float64, getproperty("statistics/ratings/bayesaverage")[1])
-      g.dict["stddev"] = parse(Float64, getproperty("statistics/ratings/stddev")[1])
-      g.dict["subdomain"] = getproperty("boardgamesubdomain")
+        g = Game(id, name)
 
+        g.rating = parse(Float64, getproperty("statistics/ratings/average")[1])
+        g.weight = parse(Float64, getproperty("statistics/ratings/averageweight")[1])
 
-      g.mechanics = getproperty("boardgamemechanic")
-      g.description = getproperty("description")[1]
+        g.mechanics = getproperty("boardgamemechanic")
+        g.description = getproperty("description")[1]
+        g.playercounts = playercounts(gnode)
+        g.playtime = playtime(gnode)
 
-      g.dict["designer"] = nodecontent(findfirst("$xgame/boardgamedesigner", root(x)))
-      g.dict["year"] =  parse(Int, nodecontent(findfirst("$xgame/yearpublished", root(x))))
-      g.dict["thumbnail"] = nodecontent(findfirst("$xgame/image", root(x)))
-      g.dict["category"] = getproperty("boardgamecategory")
-      g.dict["family"] = getproperty("boardgamefamily")
-      g.dict["owners"] = parse(Int, getproperty("statistics/ratings/owned")[1])
+        g.dict["usersrated"] = parse(Int, getproperty("statistics/ratings/usersrated")[1])
+        g.dict["brating"] = parse(Float64, getproperty("statistics/ratings/bayesaverage")[1])
+        g.dict["stddev"] = parse(Float64, getproperty("statistics/ratings/stddev")[1])
+        g.dict["subdomain"] = getproperty("boardgamesubdomain")
 
-      g.playercounts = playercounts(x, xgame)
-      g.playtime = playtime(x, id)
-      push!(gs, g)
-  end
-  gs
+        g.dict["designer"] = getproperty("boardgamedesigner")
+        g.dict["year"] = parse(Int, getproperty("yearpublished")[1])
+        g.dict["thumbnail"] = getproperty("image")[1]
+        g.dict["category"] = getproperty("boardgamecategory")
+        g.dict["family"] = getproperty("boardgamefamily")
+        g.dict["owners"] = parse(Int, getproperty("statistics/ratings/owned")[1])
+
+        push!(gs, g)
+    end
+    gs
 end
 
-function playercounts(x::EzXML.Document, xgame)
-    res = findall("$xgame/poll[@name='suggested_numplayers']/results", x)
+function playercounts(node)
+    res = findall("poll[@name='suggested_numplayers']/results", node)
     counts = Dict()
     for rs in res
         n = rs["numplayers"]
@@ -140,8 +146,8 @@ function playercounts(x::EzXML.Document, xgame)
     return counts
 end
 
-function playtime(x, id)
-    res = findfirst("//boardgame[@objectid='$(id)']/playingtime", x)
+function playtime(node)
+    res = findfirst("playingtime", node)
     t = parse(Int, nodecontent(res))
     return t
 end
@@ -174,21 +180,21 @@ function savecommentdict!()
     JLD2.save("commentcache.jld2", "cache", COMMENTDICT)
 end
 
-function comments_uncached(id, maxpages = 20)
+function comments_uncached(id, maxpages=20)
     r = HTTP.get("https://boardgamegeek.com/xmlapi2/thing?id=$id&ratingcomments=1")
     x = parsexml(r.body)
     ncomments = parse(Int, findfirst("//comments", x)["totalitems"])
     npages = div(ncomments, 100)
     print("Fetching from $npages pages: .")
     d = Dict()
-    page = 1.
+    page = 1.0
     while true
         yield()
         for c in findall("//comment", x)
             u = c["username"]
             r = parse(Float64, c["rating"])
             txt = c["value"]
-            push!(d, u=>(r, txt))
+            push!(d, u => (r, txt))
         end
         if page < npages
             #page += ceil(Int, npages/40)
@@ -215,25 +221,25 @@ function recommend!(games::Vector{<:Game})
 end
 
 function recommend!(game::Game)
-  recs = fanslike(game.id)
-  game.similar = [r.id for r in recs]
+    recs = fanslike(game.id)
+    game.similar = [r.id for r in recs]
 end
 
 
 GLOOMHAVEN = 174430
 
 function fanslike(id::Int=GLOOMHAVEN)
-  r = HTTP.get("https://api.geekdo.com/api/geekitem/recs?&objectid=$id")
-  #EzXML.parsexml(r.body)
-  s = String(r.body)
-  j = JSON.parse(s)
-  games = j["recs"]
-  map(games) do game
-    game = game["item"]
-    id = parse(Int, game["id"])
-    name = game["name"]
-    Game(id, name)
-  end
+    r = HTTP.get("https://api.geekdo.com/api/geekitem/recs?&objectid=$id")
+    #EzXML.parsexml(r.body)
+    s = String(r.body)
+    j = JSON.parse(s)
+    games = j["recs"]
+    map(games) do game
+        game = game["item"]
+        id = parse(Int, game["id"])
+        name = game["name"]
+        Game(id, name)
+    end
 end
 
 using Dates
@@ -265,7 +271,7 @@ end
 
 Int(s::String) = parse(Int, s)
 
-function parselist(id = 292940)
+function parselist(id=292940)
     r = HTTP.get("https://boardgamegeek.com/xmlapi/geeklist/292940")
     x = parsexml(r.body)
     ids = []
@@ -274,7 +280,7 @@ function parselist(id = 292940)
         push!(ids, Int(n["objectid"]))
         text = nodecontent(findfirst("body", n))
         for m in eachmatch(r"thing=(.*?)]", text)
-           push!(ids, Int(String(m.captures[1])))
+            push!(ids, Int(String(m.captures[1])))
         end
 
     end
@@ -288,7 +294,7 @@ import Base.Dict
 function Dict(g::Game)
     #d = copy(g.dict)
     d = Dict()
-    for (k,v) in g.dict
+    for (k, v) in g.dict
         d[Symbol(k)] = v
     end
     d[:id] = g.id

@@ -1,10 +1,11 @@
-function compairpair(c1, c2)
+function compairpair(c1, c2, offset=2)
     int = intersect(keys.([c1, c2])...) |> collect
     deltas = map(int) do user
         d = commentrating(c1[user]) - commentrating(c2[user])
-        w = log2(2 + length(commenttext(c1[user])) + length(commenttext(c2[user])))
+        w = log2(offset + length(commenttext(c1[user])) + length(commenttext(c2[user])))
         #println(w)
         d *= w
+        # TODO: divide by log2(offset) to have basisweight 1
         return d
     end
     return deltas
@@ -22,7 +23,7 @@ using LinearAlgebra
 function compairmatrixsig(cd::AbstractDict; scale=1, weight=:log, mode=:rate, canstay=true)
     k = sort(collect(keys(cd)))
     n = length(k)
-    A = zeros(n,n)
+    A = zeros(n, n)
     Threads.@threads for i in 1:n
         for j in i+1:n
             comparisons = compairpair(cd[k[i]], cd[k[j]])
@@ -32,15 +33,15 @@ function compairmatrixsig(cd::AbstractDict; scale=1, weight=:log, mode=:rate, ca
             elseif weight == :full
                 w = 1 # weight with counts
             else
-                w = 1/length(comparisons) # dont weight with counts
+                w = 1 / length(comparisons) # dont weight with counts
             end
             for c in comparisons
-                s = 1 / (1+exp(-scale*c))
-                A[j,i] += w * s
-                A[i,j] += w * (1-s)
+                s = 1 / (1 + exp(-scale * c))
+                A[j, i] += w * s
+                A[i, j] += w * (1 - s)
 
-                A[i,i] += w * s     # probability to stay
-                A[j,j] += w * (1-s)
+                A[i, i] += w * s     # probability to stay
+                A[j, j] += w * (1 - s)
             end
         end
     end
@@ -69,11 +70,11 @@ end
 function compair(games::Vector{<:Game}, comments::AbstractDict=comments(games); kwargs...)
 
     k, v, A = compair(comments; kwargs...)
-    gs = [games[findfirst(x->x.id == k, games)] for k in k]
+    gs = [games[findfirst(x -> x.id == k, games)] for k in k]
     gs, v, A, comments
 end
 
-function bggcompair(gs,v,a,comments)
+function bggcompair(gs, v, a, comments)
     ar = @show invperm(sortperm(@show [-g.rating for g in gs]))
     br = invperm(sortperm([-g.dict["brating"] for g in gs]))
     println("[c]")
@@ -91,10 +92,10 @@ function bggcompair(gs,v,a,comments)
 end
 
 function bggreport(games, comparison=compair(games); linked=false)
-    k,v,_ = comparison
+    k, v, _ = comparison
     for i in 1:length(k)
         id = k[i]
-        rank = findfirst(x->x.id == id, games)
+        rank = findfirst(x -> x.id == id, games)
         delta = rank - i
         if delta > 0
             delta = "+$delta"
@@ -109,30 +110,30 @@ function bggreport(games, comparison=compair(games); linked=false)
     end
 end
 
-findgame(games, id) = games[findfirst(x->x.id == id, games)]
+findgame(games, id) = games[findfirst(x -> x.id == id, games)]
 
 function comments(games::Vector{<:Game})
     comm = Dict()
-try
-    for g in games
-        println("Fetching comments for $(g.name)")
-        comm[g.id] = comments(g.id)
+    try
+        for g in games
+            println("Fetching comments for $(g.name)")
+            comm[g.id] = comments(g.id)
+        end
+    catch e
+        @show e
     end
-catch e
-    @show e
-end
     return comm
 end
 
-function bggpairs(str::String;kwargs...)
+function bggpairs(str::String; kwargs...)
     ids = [parse(Int, m.match[2:end]) for m in eachmatch(r"=(\d)+", str)]
-    bggpairs(ids;kwargs...)
+    bggpairs(ids; kwargs...)
 end
 
-function bggpairs(ids::AbstractArray{<:Integer};kwargs...)
+function bggpairs(ids::AbstractArray{<:Integer}; kwargs...)
     gs = getgames(ids)
     cs = comments(gs)
-    c = compair(gs, cs;kwargs...)
+    c = compair(gs, cs; kwargs...)
     bggcompair(c...)
     return nothing
 end

@@ -15,6 +15,7 @@ using GraphMakie
 
 using JLD2
 
+includet("db.jl")
 includet("revisable.jl")
 includet("scrape.jl")
 includet("dists.jl")
